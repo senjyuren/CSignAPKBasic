@@ -1,0 +1,72 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.14)
+PROJECT(XChengSignAPK)
+
+SET(SJR_PROJ_NOT_NEED_MSVC TRUE)
+IF (("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC") OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"))
+    SET(SJR_PROJ_NOT_NEED_MSVC FALSE)
+ENDIF ()
+
+IF (NOT SJR_3RD_JEMALLOC)
+    MESSAGE(FATAL_ERROR "This project need the Jemalloc support, so you need set path in SJR_3RD_JEMALLOC.")
+ENDIF ()
+
+IF (NOT SJR_3RD_QT)
+    MESSAGE(FATAL_ERROR "This project need the QT support, so you need set path in SJR_3RD_QT.")
+ENDIF ()
+
+IF (NOT SJR_3RD_C_SIGN_APK)
+    MESSAGE(FATAL_ERROR "This project need the CSignAPK support, so you need set path in SJR_3RD_C_SIGN_APK.")
+ENDIF ()
+
+IF (SJR_OS_WINDOWS)
+    # Windows 编译环境设置
+    # 这里是为了方便项目在Clion中切换VS前端编译器cl识别用的
+    IF (SJR_PROJ_NOT_NEED_MSVC)
+        ADD_DEFINITIONS(-Werror -Wall -Wextra -Wno-format-security -Wno-deprecated-declarations)
+    ELSE ()
+        SET(CMAKE_CXX_STANDARD 17)
+    ENDIF ()
+
+    ADD_DEFINITIONS(-D_WIN32)
+    ADD_DEFINITIONS(-D_SJR_OS_WINDOWS)
+
+    INCLUDE_DIRECTORIES(${SJR_3RD_QT}/include)
+    INCLUDE_DIRECTORIES(${SJR_3RD_JEMALLOC}/include)
+    INCLUDE_DIRECTORIES(${SJR_3RD_C_SIGN_APK}/include)
+
+    SET(SYSTEM_LIB "")
+    STRING(APPEND SYSTEM_LIB "-l${SJR_3RD_QT}/lib/Qt5Core.lib")
+    STRING(APPEND SYSTEM_LIB " -l${SJR_3RD_QT}/lib/Qt5Gui.lib")
+    STRING(APPEND SYSTEM_LIB " -l${SJR_3RD_QT}/lib/Qt5Widgets.lib")
+    STRING(APPEND SYSTEM_LIB " -l${SJR_3RD_QT}/lib/Qt5SerialPort.lib")
+    STRING(APPEND SYSTEM_LIB " -l${SJR_3RD_JEMALLOC}/lib/jemalloc.lib")
+    STRING(APPEND SYSTEM_LIB " -l${SJR_3RD_C_SIGN_APK}/lib/libCSignAPK.lib")
+
+    STRING(APPEND SYSTEM_LIB " -lws2_32 -lcrypt32 -lAdvapi32")
+
+    # 使用链接参数让GUI界面显示的时候不会出现命令行
+    IF (SJR_PROJ_NOT_NEED_CMD)
+        STRING(APPEND SYSTEM_LIB " -Wl,/SUBSYSTEM:WINDOWS -Wl,/ENTRY:mainCRTStartup")
+    ENDIF ()
+    SET(CMAKE_STATIC_LINKER_FLAGS "${SYSTEM_LIB}")
+ENDIF ()
+
+# 重置编译后的格式
+IF ((SJR_OS_ANDROID) OR (SJR_OS_LINUX))
+    SET(CMAKE_STATIC_LIBRARY_SUFFIX ".so")
+ELSE ()
+    SET(CMAKE_EXECUTABLE_SUFFIX ".exe")
+    SET(CMAKE_STATIC_LIBRARY_SUFFIX ".dll")
+ENDIF ()
+
+ADD_EXECUTABLE(XChengSignAPK main.cpp)
+TARGET_LINK_LIBRARIES(XChengSignAPK ${THIRD_LIB} ${SYSTEM_LIB})
+
+# 是否构造默认编译全测试案例
+IF (SJR_BUILD_TEST)
+    SET(BUILD_TEST_PRO "")
+ELSE ()
+    SET(BUILD_TEST_PRO EXCLUDE_FROM_ALL)
+ENDIF ()
+
+ENABLE_TESTING()
