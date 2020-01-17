@@ -5,9 +5,14 @@
 
 #include <iostream>
 #include <thread>
+#include <fstream>
+#include <filesystem>
+#include <mutex>
 
 #include <string_view>
 #include <string>
+#include <list>
+#include <vector>
 
 #include <LibrarySignAPK.h>
 #include <jemalloc/jemalloc.h>
@@ -24,7 +29,7 @@ using Jsize  = size_t;
 
 void *operator new(Jsize vLen)
 {
-    auto &&obj = je_malloc(vLen);
+    auto &&obj = malloc(vLen);
     if (obj != nullptr)
         memset(obj, 0, vLen);
     return obj;
@@ -32,7 +37,7 @@ void *operator new(Jsize vLen)
 
 void operator delete(void *v) noexcept
 {
-    je_free(v);
+    free(v);
 }
 
 void *operator new[](Jsize vLen)
@@ -48,6 +53,7 @@ void operator delete[](void *v) noexcept
     je_free(v);
 }
 
+#include "x_utils/UtilsLog.hpp"
 #include "x_app/APPApplication.hpp"
 
 #endif //XCHENGSIGNAPK_KERNAL_HPP
