@@ -53,7 +53,9 @@ void operator delete[](void *v) noexcept
     je_free(v);
 }
 
+#include "x_utils/UtilsString.hpp"
 #include "x_utils/UtilsLog.hpp"
 #include "x_app/APPApplication.hpp"
+#include "x_cmd/CmdApplication.hpp"
 
 #endif //XCHENGSIGNAPK_KERNAL_HPP
